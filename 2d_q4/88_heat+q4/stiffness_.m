@@ -24,5 +24,7 @@ for ii = 1:nele
     nodeId(:) = ELEM(ii,:);
     dofId(:) = [nodeId(1) nodeId(2) nodeId(3) nodeId(4)];
     edofMat(ii,:) = dofId;
+
+    %%
 end
 
