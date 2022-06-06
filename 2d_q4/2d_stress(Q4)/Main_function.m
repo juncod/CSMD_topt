@@ -1,4 +1,4 @@
-% Main_function(2.5,3,0.5,10,0.3)   pl:penal, q:stress relaxation, p:p-norm
+% Main_function(3.5,3,0.5,10,0.5)   pl:penal, q:stress relaxation, p:p-norm
 function Main_function(rmin,pl,q,p,volfrac)
 addpath('FE'); addpath('MMA');
 [NODE,ELEM] = inp_('Job-2.inp');
@@ -7,12 +7,12 @@ NODE = NODE.*10;
 nele = length(ELEM);
 x=volfrac*ones(nele,1);
 outeriter = 0;
-if outeriter < 0.5
-    [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
+% if outeriter < 0.5
+%     [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
 %    innerit=0;
 %    outvector1 = [outeriter innerit x'];
 %    outvector2 = [f0val fval'];
-end
+% end
 %%%%%%%%%%%%%%%%%% M M A Zone %%%%%%%%%%%%%%%%%%
 m =1;
 epsimin = 0.0000001;
@@ -27,7 +27,7 @@ low     = xlb;
 upp     = xub;
 c       = [1e4]';
 d       = [0]';
-a0      = 0;
+a0      = 1;
 a       = [0]';
 raa0    = 0.0001;
 raa     = 0.0001;
@@ -42,6 +42,7 @@ outit = 0;
 while  outit < maxoutit
     outit   = outit+1;
     outeriter = outeriter+1;
+    [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
     %%%% The parameters low, upp, raa0 and raa are calculated:
     [low,upp,raa0,raa] = ...
     MMA_asymp(outeriter,n,x,xold1,xold2,xmin,xmax,low,upp, ...
@@ -52,7 +53,7 @@ while  outit < maxoutit
     xold2 = xold1;
     xold1 = x;
     x  = xmma;
-    [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
+
     % PRINT RESULTS
     fprintf(' It.:%5i      P-norm Stress.:%11.4f   Vol.:%7.3f \n',outit,f0val, ...
         mean(x(:)));

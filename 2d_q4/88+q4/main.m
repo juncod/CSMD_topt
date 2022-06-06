@@ -1,7 +1,7 @@
 clear; clc;
 tic
 [NODE,ELEM] = inp_('Job-2.inp');
-volfrac = 0.5; penal = 3; rmin = 0.5;
+volfrac = 0.5; penal = 3; rmin = 0.4;
 x = topology(NODE,ELEM,volfrac,penal,rmin);
 toc
 %% Function
@@ -38,7 +38,7 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
        ' Vol.: ' sprintf('%6.3f',sum(sum(x))/(nele)) ...
         ' ch.: ' sprintf('%6.3f',change)])
         % Plot Density
-        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',-x','FaceColor','flat','LineStyle','none'); axis equal; axis tight; axis off;
+        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',ceil(x'.*-1.999),'FaceColor','flat','LineStyle','none'); axis equal; axis tight; axis off;
         colormap(gray)
         pause(1e-6);       
     end
@@ -119,9 +119,10 @@ end
 function [xnew] = OC_(ELEM,x,volfrac,dcn)
     l1 = 0; l2 = 1e5; move = 0.05;
     nele = length(ELEM);
+    dv = ones(1,nele)/nele;
     while(l2-l1 > 1e-6)
         lmid = 0.5*(l1+l2);
-        xnew = max(0.001,max(x-move,min(1,min(x+move,x.*sqrt(-dcn./lmid)))));
+        xnew = max(0.001,max(x-move,min(1,min(x+move,x.*sqrt(-dcn./dv./lmid)))));
         if sum(sum(xnew)) - volfrac*nele > 0
             l1 = lmid;
         else

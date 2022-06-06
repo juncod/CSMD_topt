@@ -12,15 +12,12 @@ KE = zeros(8,8,nele);
 B0 = zeros(3,8,nele);
 edofMat = zeros(nele,8);
 for ii = 1:nele
-    a = zeros(3,8);
     [J,J0] = jacobian_(NODE,ELEM(ii,:),s,t);
     Ke = zeros(8,8);
     for i = 1:4
         B = Bmatrix_(NODE,ELEM(ii,:),J(i,1),s(i),t(i));
         Ke(:,:) = Ke(:,:) + B' * D * B * J(i,1) * h;        
-        a = a(:) + B(:);
     end
-    a = a/4;
     B0(:,:,ii) = B0matrix_(NODE,ELEM(ii,:),J0);
     KE(:,:,ii) = Ke(:,:);
 
