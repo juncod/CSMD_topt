@@ -15,8 +15,9 @@ freedofs = find(reshape(~BC', [],1));
 BC_N = zeros(n_node, 2);
 BC_N(x_upper & y_lower,2) = 1;
 BC_Nid = find(reshape(BC_N', [],1));
-h = 1;
-F = sparse(BC_Nid,1,-1,sdof,1);
+h = 25;
+F = sparse(BC_Nid,1,1,sdof,1);
+F(BC_Nid(:)) = -10e3;
 U = zeros(sdof,1);
 %% Solve Stiffness %%
 E0 = 1; Emin =1e-9; v = 0.25;
