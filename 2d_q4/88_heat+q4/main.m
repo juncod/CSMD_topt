@@ -1,7 +1,7 @@
 clear; clc;
 tic
 [NODE,ELEM] = inp_('Job-2.inp');
-volfrac = 0.5; penal = 3; rmin = 0.4;
+volfrac = 0.5; penal = 3; rmin = 0.3;
 x = topology(NODE,ELEM,volfrac,penal,rmin);
 toc
 %% Function
@@ -11,11 +11,13 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
     Ue = zeros(4,1);
     x(1:nele) = volfrac;
     iter = 0;
+    maxiter = 150;
     change = 1;
     [Hs,H]=prepare_filter(rmin,NODE,ELEM);
     % Start Iteration
-    while change > 0.001
+    while change > 0.001 && iter < maxiter
         iter = iter + 1;
+        if iter <= 15, gf = 1; else gf = min(1.5,1.01*gf); end
         xold = x;
     % FEA analysis
         [U,KE] = FE_(NODE,ELEM,x,penal,k0,kmin);
@@ -31,14 +33,14 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
         % Filtering of Sensitivities
         dcn(:) = H*(x(:).*dc(:))./Hs./max(1e-3,x(:));
         % Design Update by the Optimality Criteria Method
-        [x] = OC_(ELEM,x,volfrac,dcn);
+        [x] = OC_(ELEM,x,volfrac,dcn,gf);
         % Print Results
         change = max(max(abs(x-xold)));
         disp([' It.: ' sprintf('%4i',iter) ' Obj.: ' sprintf('%10.4f',c) ...
        ' Vol.: ' sprintf('%6.3f',sum(sum(x))/(nele)) ...
         ' ch.: ' sprintf('%6.3f',change)])
         % Plot Density
-        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',-x','FaceColor','flat','LineStyle','none'); axis equal; axis tight; axis off; colorbar;
+        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',-x','FaceColor','flat','LineStyle','none'); axis equal; axis tight; axis off;
         colormap(gray)
         pause(1e-6);       
     end
@@ -57,16 +59,20 @@ function [U,KE] = FE_(NODE,ELEM,x,penal,k0,kmin)
     x_middle = abs(NODE(:,1)-max(NODE(:,1)/2)) < 0.5;
     y_middle = abs(NODE(:,2)-max(NODE(:,2)/2)) < 0.5;
     BC_nodes = y_upper & x_middle;
+    % BC_nodes = x_upper & y_lower;
 
     BC = zeros(n_node, 1);
-    BC(x_upper & y_lower,1)=1;%BC(BC_nodes,1) = 1;
+    BC(BC_nodes,1) = 1;
     BCid = find(reshape(BC', [],1));
     freedofs = find(reshape(~BC', [],1));
+
     BC_N = zeros(n_node, 1);
     BC_N(x_lower,1) = 1;
     BC_Nid = find(reshape(BC_N', [],1));
     %% Force condition %%
-    F = zeros(sdof,1); F(BC_Nid(:)) = -0.01;%F(:) = -0.01; % => q, 열이 빠지는 곳
+    F = zeros(sdof,1);% => q, 열이 빠지는 곳
+    % F(BC_Nid(:)) = -0.01;
+    F(:) = -0.01; 
     %% Solve Stiffness %%
     v = 0.25;    h = 25;
     D = 1/(1-v^2) * [1 v 0; v 1 0; 0 0 (1-v)/2];
@@ -115,13 +121,13 @@ end
 
 
 %% x new
-function [xnew] = OC_(ELEM,x,volfrac,dcn)
+function [xnew] = OC_(ELEM,x,volfrac,dcn,gf)
     l1 = 0; l2 = 1e5; move = 0.05;
     nele = length(ELEM);
     dv = ones(1,nele)/nele;
     while(l2-l1 > 1e-6)
         lmid = 0.5*(l1+l2);
-        xnew = max(0.001,max(x-move,min(1,min(x+move,x.*sqrt(-dcn./dv./lmid)))));
+        xnew = max(0.001,max(x-move,min(1,min(x+move,(x.*sqrt(-dcn./dv./lmid)).^gf))));
         if sum(sum(xnew)) - volfrac*nele > 0
             l1 = lmid;
         else

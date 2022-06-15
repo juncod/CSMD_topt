@@ -1,8 +1,7 @@
-% Main_function(3.5,3,0.5,10,0.5)   pl:penal, q:stress relaxation, p:p-norm
+% Main_function(0.3,3,0.5,10,0.5)   pl:penal, q:stress relaxation, p:p-norm
 function Main_function(rmin,pl,q,p,volfrac)
 addpath('FE'); addpath('MMA');
 [NODE,ELEM] = inp_('Job-2.inp');
-NODE = NODE.*10;
 [Hs,H]=Prepare_filter(rmin,NODE,ELEM);
 nele = length(ELEM);
 x=volfrac*ones(nele,1);
