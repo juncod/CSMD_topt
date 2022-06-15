@@ -1,9 +1,8 @@
 clear; clc;
-tic
+addpath('data');
 [NODE,ELEM] = inp_('Job-2.inp');
 volfrac = 0.5; penal = 3; rmin = 0.3;
 x = topology(NODE,ELEM,volfrac,penal,rmin);
-toc
 %% Function
 function x = topology(NODE,ELEM,volfrac,penal,rmin)
     k0 = 1; kmin = 1e-3;

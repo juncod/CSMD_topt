@@ -6,12 +6,6 @@ addpath('FE'); addpath('MMA');
 nele = length(ELEM);
 x=volfrac*ones(nele,1);
 outeriter = 0;
-% if outeriter < 0.5
-%     [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
-%    innerit=0;
-%    outvector1 = [outeriter innerit x'];
-%    outvector2 = [f0val fval'];
-% end
 %%%%%%%%%%%%%%%%%% M M A Zone %%%%%%%%%%%%%%%%%%
 m =1;
 epsimin = 0.0000001;
