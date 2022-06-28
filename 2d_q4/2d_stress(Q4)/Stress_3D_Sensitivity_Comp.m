@@ -83,6 +83,12 @@ for i = 1:nele
     pnorm_sen(i) = pnorm^(1-p)*(MISES(i)^p*q/x(i)-pl*x(i)^(pl-1)*lamda(index)'*KE(:,:,i)*U(index));
 end
 
+% [sen_H]=Sens_filter(NODE,ELEM,x);
+% pnorm_sen = zeros(nele,1);
+% for i = 1:nele
+%     index=index_matrix(:,i);
+%     pnorm_sen(i) = -sen_H(i)*pnorm^(1-p)*(MISES(i)^p*q/x(i)+pl*x(i)^(pl-1)*lamda(index)'*KE(:,:,i)*U(index));
+% end
 
 
 % =========================================================================
