@@ -50,29 +50,38 @@ index_matrix=edofMat';
 pnorm=(sum(MISES.^p))^(1/p);
 
 
-
-T1 = zeros(nele,1);
-for i=1:nele
-    T1(i)=DpnDvm*q/x(i)*MISES(i)^(p-1)*DvmDs(i,:)*S(i,:)';
-end
+% T1 = zeros(nele,1);
+% for i=1:nele
+%     T1(i)=DpnDvm*q/x(i)*MISES(i)^(p-1)*DvmDs(i,:)*S(i,:)';
+% end
+% gama=zeros(sdof,1);
+% for i=1:nele
+%     index=index_matrix(:,i);
+%     gama(index)=gama(index)+x(i)^q*DpnDvm*B0(:,:,i)'*D'*DvmDs(i,:)'*MISES(i).^(p-1);
+% end
+% lamda=zeros(sdof,1);
+% lamda(freedofs,:)=K(freedofs,freedofs)\gama(freedofs,:);
+% T2=zeros(nele,1);
+% for i=1:nele
+%     index=index_matrix(:,i);
+%     T2(i)=-lamda(index)'*pl*x(i)^(pl-1)*KE(:,:,i)*U(index);
+% end
+% pnorm_sen=(T1+T2);
 
 
 gama=zeros(sdof,1);
 for i=1:nele
     index=index_matrix(:,i);
-    gama(index)=gama(index)+x(i)^q*DpnDvm*B0(:,:,i)'*D'*DvmDs(i,:)'*MISES(i).^(p-1);
+    gama(index)=gama(index)+x(i)^q*B0(:,:,i)'*D'*mises_mat*S(i,:)'*MISES(i).^(p-2);
 end
 lamda=zeros(sdof,1);
 lamda(freedofs,:)=K(freedofs,freedofs)\gama(freedofs,:);
-T2=zeros(nele,1);
-for i=1:nele
+
+pnorm_sen = zeros(nele,1);
+for i = 1:nele
     index=index_matrix(:,i);
-    T2(i)=-lamda(index)'*pl*x(i)^(pl-1)*KE(:,:,i)*U(index);
+    pnorm_sen(i) = pnorm^(1-p)*(MISES(i)^p*q/x(i)-pl*x(i)^(pl-1)*lamda(index)'*KE(:,:,i)*U(index));
 end
-
-
-pnorm_sen=(T1+T2);
-
 
 
 
