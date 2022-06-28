@@ -1,6 +1,6 @@
 % Main_function(0.3,3,0.5,10,0.5)   pl:penal, q:stress relaxation, p:p-norm
 function Main_function(rmin,pl,q,p,volfrac)
-addpath('FE'); addpath('MMA');
+addpath('FE'); addpath('MMA'); addpath('data');
 [NODE,ELEM] = inp_('Job-2.inp');
 [Hs,H]=Prepare_filter(rmin,NODE,ELEM);
 nele = length(ELEM);

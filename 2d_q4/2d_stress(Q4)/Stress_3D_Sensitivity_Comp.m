@@ -33,44 +33,45 @@ K = sparse(iK,jK,sK); %K = (K+K')/2;
 U(freedofs) = K(freedofs,freedofs)\F(freedofs);
 % U", K", KE(3차원), edofMat", D" , B(B0), freedofs"
 
+
+
+
 MISES=zeros(nele,1); % von Mises stress vector
-S=zeros(nele,3); 
-for i=1:nele
-    temp=x(i)^q*(D*B0(:,:,i)*U(edofMat(i,:)))';
-    S(i,:)=temp;
-    MISES(i)=sqrt(0.5*((temp(1)-temp(2))^2+temp(1)^2....
-    +temp(2)^2+6*temp(3)^2));
-end
-nele=size(x(:),1); % total element number
-[ndof,~]=size(U);
+S = zeros(nele,3);
 DvmDs=zeros(nele,3);
-dpn_dvms=(sum(MISES.^p))^(1/p-1);
+mises_mat = [1 -1/2 0; -1/2 1 0; 0 0 3];
+for i=1:nele
+    S(i,:)=x(i)^q*(D*B0(:,:,i)*U(edofMat(i,:)));
+    MISES(i)=sqrt(S(i,:)*mises_mat*S(i,:)');
+    DvmDs(i,:) = S(i,:)*mises_mat/MISES(i);
+end
+DpnDvm=(sum(MISES.^p))^(1/p-1);
 index_matrix=edofMat';
 pnorm=(sum(MISES.^p))^(1/p);
+
+
+
+T1 = zeros(nele,1);
 for i=1:nele
-    DvmDs(i,1)=1/2/MISES(i)*(2*S(i,1)-S(i,2));
-    DvmDs(i,2)=1/2/MISES(i)*(2*S(i,2)-S(i,1));
-    DvmDs(i,3)=3/MISES(i)*S(i,3);
+    T1(i)=DpnDvm*q/x(i)*MISES(i)^(p-1)*DvmDs(i,:)*S(i,:)';
 end
-beta=zeros(nele,1);
-for i=1:nele
-    u=reshape(U(edofMat(i,:),:)',[],1);
-    beta(i)=q*(x(i))^(q-1)*MISES(i)^(p-1)*DvmDs(i,:)*D*B0(:,:,i)*u;
-end
-T1=dpn_dvms*beta;
-gama=zeros(ndof,1);
+
+
+gama=zeros(sdof,1);
 for i=1:nele
     index=index_matrix(:,i);
-    gama(index)=gama(index)+x(i)^q*dpn_dvms*B0(:,:,i)'*D'*DvmDs(i,:)'*MISES(i).^(p-1);
+    gama(index)=gama(index)+x(i)^q*DpnDvm*B0(:,:,i)'*D'*DvmDs(i,:)'*MISES(i).^(p-1);
 end
-lamda=zeros(ndof,1);
+lamda=zeros(sdof,1);
 lamda(freedofs,:)=K(freedofs,freedofs)\gama(freedofs,:);
 T2=zeros(nele,1);
 for i=1:nele
     index=index_matrix(:,i);
     T2(i)=-lamda(index)'*pl*x(i)^(pl-1)*KE(:,:,i)*U(index);
 end
-pnorm_sen=T1+T2;
+
+
+pnorm_sen=(T1+T2);
 
 
 
