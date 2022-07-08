@@ -1,7 +1,7 @@
-% Main_function(0.3,3,0.5,10,0.5)   pl:penal, q:stress relaxation, p:p-norm
+% Main_function(0.3,3,0.5,10,0.3)   pl:penal, q:stress relaxation, p:p-norm
 function Main_function(rmin,pl,q,p,volfrac)
 addpath('FE'); addpath('MMA'); addpath('data');
-[NODE,ELEM] = inp_('Job-2.inp');
+[NODE,ELEM] = inp_('main.inp');
 [Hs,H]=Prepare_filter(rmin,NODE,ELEM);
 nele = length(ELEM);
 x=volfrac*ones(nele,1);
@@ -18,7 +18,7 @@ xmin    = xlb;
 xmax    = xub;
 low     = xlb;
 upp     = xub;
-c       = [1e4]';
+c       = [1e6]';
 d       = [0]';
 a0      = 1;
 a       = [0]';
@@ -34,22 +34,23 @@ kktnorm = kkttol+1;
 outit = 0;
 while  outit < maxoutit
     outit   = outit+1;
+    if outit <= 15, gf = 0.2; else gf = min(0.5,1.01*gf); end
     outeriter = outeriter+1;
-    [f0val,df0dx,fval,dfdx]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
+    [f0val,df0dx,fval,dfdx,MISES_MAX]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
     %%%% The parameters low, upp, raa0 and raa are calculated:
     [low,upp,raa0,raa] = ...
     MMA_asymp(outeriter,n,x,xold1,xold2,xmin,xmax,low,upp, ...
     raa0,raa,raa0eps,raaeps,df0dx,dfdx);
     [xmma,ymma,zmma,lam,xsi,eta,mu,zet,s,f0app,fapp] = ...
     MMA_gcmmasub(m,n,outeriter,epsimin,x,xmin,xmax,low,upp, ...
-    raa0,raa,f0val,df0dx,fval,dfdx,a0,a,c,d);
+    raa0,raa,f0val,df0dx,fval,dfdx,a0,a,c,d,gf);
     xold2 = xold1;
     xold1 = x;
     x  = xmma;
 
     % PRINT RESULTS
-    fprintf(' It.:%5i      P-norm Stress.:%11.4f   Vol.:%7.3f \n',outit,f0val, ...
-        mean(x(:)));
+    fprintf(' It.:%5i   P-norm Stress.:%11.4f   Vol.:%7.3f   MISES(max).:%11.4f \n',outit,f0val, ...
+        mean(x(:)),MISES_MAX);
     %%%% The residual vector of the KKT conditions is calculated:
     [residu,kktnorm,residumax] = ...
     MMA_kktcheck(m,n,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s, ...
@@ -58,3 +59,5 @@ while  outit < maxoutit
 %    outvector2 = [f0val fval'];
     x_his(:,outit)=xmma;
 end
+saveX=fliplr(reshape(x,[100,100]))';
+save('1.mat','saveX')

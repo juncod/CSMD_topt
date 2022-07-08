@@ -29,14 +29,14 @@
 %
 function [xmma,ymma,zmma,lam,xsi,eta,mu,zet,s,f0app,fapp] = ...
 MMA_gcmmasub(m,n,iter,epsimin,xval,xmin,xmax,low,upp, ...
-         raa0,raa,f0val,df0dx,fval,dfdx,a0,a,c,d);
+         raa0,raa,f0val,df0dx,fval,dfdx,a0,a,c,d,gf);
 %
 eeen = ones(n,1);
 zeron = zeros(n,1);
 %
 % Calculations of the bounds alfa and beta.
 albefa = 0.01;
-move =0.2;
+move =0.3;
 %
 zzz1 = low + albefa*(xval-low);
 zzz2 = xval - move*(xmax-xmin);
