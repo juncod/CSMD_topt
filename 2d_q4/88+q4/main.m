@@ -3,6 +3,7 @@ addpath('data');
 [NODE,ELEM] = inp_('main.inp');
 volfrac = 0.5; penal = 3; rmin = 0.3;
 x = topology(NODE,ELEM,volfrac,penal,rmin);
+saveFileName = '2';
 %% Function
 function x = topology(NODE,ELEM,volfrac,penal,rmin)
     nele = length(ELEM);
@@ -58,9 +59,7 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
         colormap(gray)
         pause(1e-6);       
     end
-    forSaveX = x(:)>0.1;
-    saveX=fliplr(reshape(forSaveX,[100,100]))';
-    save('1.mat','saveX')
+    saveFunction(saveFileName,x)
 end
 
 

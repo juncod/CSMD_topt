@@ -1,5 +1,7 @@
-% Main_function(0.3,3,0.5,10,0.3)   pl:penal, q:stress relaxation, p:p-norm
-function Main_function(rmin,pl,q,p,volfrac)
+clear; clc; close all;
+% pl:penal, q:stress relaxation, p:p-norm
+rmin = 0.3;   pl = 3;   q = 0.5;   p = 10;   volfrac = 0.3;
+saveFileName = '2';
 addpath('FE'); addpath('MMA'); addpath('data');
 [NODE,ELEM] = inp_('main.inp');
 [Hs,H]=Prepare_filter(rmin,NODE,ELEM);
@@ -26,7 +28,7 @@ raa0    = 0.0001;
 raa     = 0.0001;
 raa0eps = 0.0000001;
 raaeps  = 0.0000001;
-maxoutit  = 120;
+maxoutit  = 200;
 kkttol  = 0;
 nele = length(ELEM);
 x_his=zeros(nele,maxoutit);
@@ -47,17 +49,17 @@ while  outit < maxoutit
     xold2 = xold1;
     xold1 = x;
     x  = xmma;
+    x_his(:,outit)=xmma;
 
     % PRINT RESULTS
     fprintf(' It.:%5i   P-norm Stress.:%11.4f   Vol.:%7.3f   MISES(max).:%11.4f \n',outit,f0val, ...
         mean(x(:)),MISES_MAX);
     %%%% The residual vector of the KKT conditions is calculated:
-    [residu,kktnorm,residumax] = ...
-    MMA_kktcheck(m,n,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s, ...
-    xmin,xmax,df0dx,fval,dfdx,a0,a,c,d);
+    % [residu,kktnorm,residumax] = ...
+    % MMA_kktcheck(m,n,xmma,ymma,zmma,lam,xsi,eta,mu,zet,s, ...
+    % xmin,xmax,df0dx,fval,dfdx,a0,a,c,d);
 %    outvector1 = [outeriter innerit x'];
 %    outvector2 = [f0val fval'];
-    x_his(:,outit)=xmma;
+
 end
-saveX=fliplr(reshape(x,[100,100]))';
-save('1.mat','saveX')
+saveFunction(saveFileName,x)
