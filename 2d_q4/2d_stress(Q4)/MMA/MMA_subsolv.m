@@ -78,7 +78,7 @@ while epsi > epsimin
   remu = mu.*y - epsvecm;
   rezet = zet*z - epsi;
   res = lam.*s - epsvecm;
-  residu1 = [rex' rey' rez]';
+  residu1 = [rex' rey' rez']';
   residu2 = [relam' rexsi' reeta' remu' rezet res']';
   residu = [residu1' residu2']';
   residunorm = sqrt(residu'*residu);

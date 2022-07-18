@@ -1,26 +1,27 @@
-function [pnorm,pnorm_sen,MISES]=Stress_3D_Sensitivity_Comp(x,NODE,ELEM,pl,q,p)
+function [pnorm,pnorm_sen,MISES,c,dc]=Stress_3D_Sensitivity_Comp(x,NODE,ELEM,pl,q,p)
 n_node = length(NODE); nele = length(ELEM);
 dof = 2;        sdof = n_node*dof;
 %% Boundary Condition %%
 x_lower = abs(NODE(:,1)) < 1e-6;
-x_upper = abs(NODE(:,1)-max(NODE(:,1))) < 1e-6;
+x_upper = abs(NODE(:,1)-10) < 1e-6;
 y_lower = abs(NODE(:,2)) < 1e-6;
-y_upper = abs(NODE(:,2)-max(NODE(:,2))) < 1e-6; %% points of highest and lowest x,y
+y_upper = abs(NODE(:,2)-10) < 1e-6;
+y_middle = abs(NODE(:,2)-5) < 1e-6; %% points of highest and lowest x,y
 
 BC = zeros(n_node, 2);
-BC(x_lower,:) = 1;
+BC(y_upper,:) = 1;
 BCid = find(reshape(BC', [],1));
 freedofs = find(reshape(~BC', [],1));
 %% Force condition %%
 BC_N = zeros(n_node, 2);
-BC_N(x_upper & y_lower,2) = 1;
+BC_N(x_upper & y_middle,2) = 1;
 BC_Nid = find(reshape(BC_N', [],1));
-h = 25;
+h = 10;
 F = sparse(BC_Nid,1,1,sdof,1);
 F(BC_Nid(:)) = -10e3;
 U = zeros(sdof,1);
 %% Solve Stiffness %%
-E0 = 1; Emin =1e-9; v = 0.25;
+E0 = 200e3; Emin =1e-9; v = 0.25;
 D = 1/(1-v^2) * [1 v 0; v 1 0; 0 0 (1-v)/2];
 [KE,edofMat,B0] = stiffness_(NODE, ELEM, D, h); % K = global stiffness, KE = local stiffness
 iK = reshape(kron(edofMat,ones(8,1))',64*nele,1);
@@ -34,13 +35,25 @@ U(freedofs) = K(freedofs,freedofs)\F(freedofs);
 % U", K", KE(3차원), edofMat", D" , B(B0), freedofs"
 
 
+Ue = zeros(8,1);
+c = 0;
+for i=1:nele
+    for j = 1:4
+        Ue(2*j-1,1) = U(2*ELEM(i,j) - 1);
+        Ue(2*j,1) = U(2*ELEM(i,j));
+    end
+    c = c + (Emin+x(i)'.^pl*(E0-Emin)) * Ue' * KE(:,:,i) * Ue;
+    dc(i) = -pl*x(i)^(pl-1)*(E0-Emin) *Ue' * KE(:,:,i) * Ue;
+end
+
+
 
 
 MISES=zeros(nele,1); % von Mises stress vector
 S = zeros(nele,3);
 mises_mat = [1 -1/2 0; -1/2 1 0; 0 0 3];
 for i=1:nele
-    S(i,:)=x(i)^q*(D*B0(:,:,i)*U(edofMat(i,:)));
+    S(i,:)=x(i)^q*((Emin+x(i)'.^pl*(E0-Emin))*D*B0(:,:,i)*U(edofMat(i,:)));
     MISES(i)=sqrt(S(i,:)*mises_mat*S(i,:)');
 end
 index_matrix=edofMat';

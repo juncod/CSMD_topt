@@ -1,12 +1,12 @@
 clear; clc; close all;
 addpath('FE'); addpath('MMA'); addpath('data');
 % pl:penal, q:stress relaxation, p:p-norm
-rmin = 0.3;   pl = 3;   q = 0.5;   p = 10;   volfrac = 0.3;
+rmin = 0.5;   pl = 3;   q = 0.5;   p = 20;   volfrac = 0.5;
 
-saveFileName = '1';
+saveFileName = '4';
 plotCut = 0.15;
 
-[NODE,ELEM] = inp_('main.inp');
+[NODE,ELEM] = inp_('Job-L.inp');
 [Hs,H]=Prepare_filter(rmin,NODE,ELEM);
 nele = length(ELEM);
 x=volfrac*ones(nele,1);
@@ -15,7 +15,7 @@ f1 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
 f2 = figure; colormap(jet); axis equal; axis tight; axis off; colorbar;
 f3 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
 %%%%%%%%%%%%%%%%%% M M A Zone %%%%%%%%%%%%%%%%%%
-m =1;
+m =2;
 epsimin = 0.0000001;
 n=length(x(:));
 xold1   = x;
@@ -26,15 +26,15 @@ xmin    = xlb;
 xmax    = xub;
 low     = xlb;
 upp     = xub;
-c       = [1e6]';
-d       = [0]';
+c       = [1e6 1e6]';
+d       = [0 0]';
 a0      = 1;
-a       = [0]';
+a       = [0 0]';
 raa0    = 0.0001;
 raa     = 0.0001;
 raa0eps = 0.0000001;
 raaeps  = 0.0000001;
-maxoutit  = 200;
+maxoutit  = 150;
 kkttol  = 0;
 nele = length(ELEM);
 x_his=zeros(nele,maxoutit);
@@ -44,7 +44,7 @@ while  outit < maxoutit
     outit   = outit+1;
     if outit <= 15, gf = 0.2; else gf = min(0.5,1.01*gf); end
     outeriter = outeriter+1;
-    [f0val,df0dx,fval,dfdx,MISES]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
+    [f0val,df0dx,fval,dfdx,MISES,pnorm]=Stress_minimize(NODE,ELEM,x,Hs,H,pl,q,p,volfrac);
     %%%% The parameters low, upp, raa0 and raa are calculated:
     [low,upp,raa0,raa] = ...
     MMA_asymp(outeriter,n,x,xold1,xold2,xmin,xmax,low,upp, ...
@@ -58,7 +58,7 @@ while  outit < maxoutit
     x_his(:,outit)=xmma;
 
     % PRINT RESULTS
-    fprintf(' It.:%5i   P-norm Stress.:%11.4f   Vol.:%7.3f   MISES(max).:%11.4f \n',outit,f0val, ...
+    fprintf(' It.:%5i   P-norm Stress.:%11.4f   Vol.:%7.3f   MISES(max).:%11.4f \n',outit,pnorm, ...
         mean(x(:)),max(MISES));
 
     % Plot Density
