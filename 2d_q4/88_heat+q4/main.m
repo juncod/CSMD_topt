@@ -2,10 +2,11 @@ clear; clc; close all;
 addpath('data');
 [NODE,ELEM] = inp_('main.inp');
 volfrac = 0.5; penal = 3; rmin = 0.3;
-x = topology(NODE,ELEM,volfrac,penal,rmin);
 saveFileName = '2';
+plotCut = 0.1;
+x = topology(NODE,ELEM,volfrac,penal,rmin,saveFileName,plotCut);
 %% Function
-function x = topology(NODE,ELEM,volfrac,penal,rmin)
+function x = topology(NODE,ELEM,volfrac,penal,rmin,saveFileName,plotCut)
     k0 = 1; kmin = 1e-3;
     nele = length(ELEM);
     Ue = zeros(4,1);
@@ -13,6 +14,8 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
     iter = 0;
     maxiter = 120;
     change = 1;
+    f1 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
+    f3 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
     [Hs,H]=prepare_filter(rmin,NODE,ELEM);
     % Start Iteration
     while change > 0.001 && iter < maxiter
@@ -40,12 +43,14 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin)
        ' Vol.: ' sprintf('%6.3f',sum(sum(x))/(nele)) ...
         ' ch.: ' sprintf('%6.3f',change)])
         % Plot Density
-        plot_x = max(0,x(:)-0.1);
-        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',-ceil(plot_x),'FaceColor','flat','LineStyle','none'); axis equal; axis tight; axis off;
-        colormap(gray)
+        plot_x = -ceil(max(0,x(:)-plotCut));
+        figure(f1); 
+        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',-x','FaceColor','flat','LineStyle','none'); 
+        figure(f3); 
+        patch('Faces',ELEM,'Vertices',NODE,'FaceVertexCData',plot_x,'FaceColor','flat','LineStyle','none'); 
         pause(1e-6);       
     end
-    saveFunction(saveFileName,x)
+    saveFunction(saveFileName,x,f1,f3,plotCut)
 end
 
 
