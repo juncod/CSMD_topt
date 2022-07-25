@@ -1,8 +1,8 @@
 clear; clc; close all;
 addpath('data');
 [NODE,ELEM] = inp_('main.inp');
-volfrac = 0.5; penal = 3; rmin = 0.3;
-saveFileName = '2';
+volfrac = 0.4; penal = 3; rmin = 0.3;
+saveFileName = '30';
 plotCut = 0.1;
 x = topology(NODE,ELEM,volfrac,penal,rmin,saveFileName,plotCut);
 %% Function
@@ -63,23 +63,26 @@ function [U,KE] = FE_(NODE,ELEM,x,penal,k0,kmin)
     x_upper = abs(NODE(:,1)-max(NODE(:,1))) < 1e-6;
     y_lower = abs(NODE(:,2)) < 1e-6;
     y_upper = abs(NODE(:,2)-max(NODE(:,2))) < 1e-6;
-    x_middle = abs(NODE(:,1)-max(NODE(:,1)/2)) < 0.5;
-    y_middle = abs(NODE(:,2)-max(NODE(:,2)/2)) < 0.5;
-    BC_nodes = y_upper & x_middle;
-    % BC_nodes = x_upper & y_lower;
+    x_middle = abs(NODE(:,1)-5) < 1e-6;
+    y_middle = abs(NODE(:,2)-5) < 1e-6;
+    y_middle_lower = abs(NODE(:,2)-2.5) < 1e-6;
+    x_middle_upper = abs(NODE(:,1)-7.5) < 1e-6;
+
 
     BC = zeros(n_node, 1);
-    BC(BC_nodes,1) = 1;
+    BC(x_middle&y_middle_lower,1) = 1;
+    BC(y_middle&x_middle_upper,1) = 1;
     BCid = find(reshape(BC', [],1));
     freedofs = find(reshape(~BC', [],1));
 
     BC_N = zeros(n_node, 1);
     BC_N(x_lower,1) = 1;
+    BC_N(y_upper,1) = 1;
     BC_Nid = find(reshape(BC_N', [],1));
     %% Force condition %%
     F = zeros(sdof,1);% => q, 열이 빠지는 곳
-    % F(BC_Nid(:)) = -0.01;
-    F(:) = -0.01; 
+    F(BC_Nid(:)) = -0.01;
+    % F(:) = -0.01;
     %% Solve Stiffness %%
     v = 0.25;    h = 25;
     D = 1/(1-v^2) * [1 v 0; v 1 0; 0 0 (1-v)/2];

@@ -1,8 +1,8 @@
 clear; clc; close all;
 addpath('data');
 [NODE,ELEM] = inp_('main.inp');
-volfrac = 0.5; penal = 3; rmin = 0.3;
-saveFileName = '2';
+volfrac = 0.4; penal = 3; rmin = 0.3;
+saveFileName = '30';
 plotCut = 0.1;
 x = topology(NODE,ELEM,volfrac,penal,rmin,saveFileName,plotCut);
 %% Function
@@ -17,22 +17,25 @@ function x = topology(NODE,ELEM,volfrac,penal,rmin,saveFileName,plotCut)
     f1 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
     f3 = figure; colormap(gray); axis equal; axis tight; axis off; caxis([-1 0]);
 
-
-    ELEM_dis = zeros(nele,2);
-    for i = 1:nele
-        ELEM_dis(i,:) = (NODE(ELEM(i,1),:)+NODE(ELEM(i,2),:)+NODE(ELEM(i,3),:)+NODE(ELEM(i,4),:))/4;
-    end
-    eX_middle_upper = ELEM_dis(:,1)>5;
-    eY_middle_upper = ELEM_dis(:,2)>5; 
-    eZero = zeros(nele,1);
-    eZero(eX_middle_upper&eY_middle_upper) = 1;
-    eZero_id = find(reshape(eZero', [],1));
+    % RESTRICT DOMAIN
+    % ELEM_dis = zeros(nele,2);
+    % for i = 1:nele
+    %     ELEM_dis(i,:) = (NODE(ELEM(i,1),:)+NODE(ELEM(i,2),:)+NODE(ELEM(i,3),:)+NODE(ELEM(i,4),:))/4;
+    % end
+    % eX_middle_upper = ELEM_dis(:,1)>5;
+    % eX_middle_lower = ELEM_dis(:,1)<5;
+    % eY_middle_upper = ELEM_dis(:,2)>5;
+    % eY_middle_lower = ELEM_dis(:,2)<5; 
+    % eZero = zeros(nele,1);
+    % eZero(eY_middle_upper) = 1;
+    % eZero_id = find(reshape(eZero', [],1));
 
     % Start Iteration
     while change > 0.001 && iter < maxiter
         iter = iter + 1;
         if iter <= 15, gf = 1; else gf = min(2,1.01*gf); end
-        x(eZero_id) = 0.001;
+        % RESTRICT DOMAIN
+        % x(eZero_id) = 0.001;
         xold = x;
     % FEA analysis
         [U,KE] = FE_(NODE,ELEM,x,penal);
@@ -80,12 +83,14 @@ function [U,KE] = FE_(NODE,ELEM,x,penal)
     y_middle = abs(NODE(:,2)-5) < 1e-6;  %% points of highest and lowest x,y %% points of highest and lowest x,y
 
     BC = zeros(n_node, 2);
-    BC(y_upper,:) = 1;
+    BC(x_lower,:) = 1;
+    % BC(x_upper,:) = 1;
     BCid = find(reshape(BC', [],1));
     freedofs = find(reshape(~BC', [],1));
     %% Force condition %%
     BC_N = zeros(n_node, 2);
-    BC_N(x_upper & y_middle,2) = 1;
+    BC_N(x_upper & y_lower,2) = 1;
+    BC_N(x_upper & y_upper,2) = -1;
     BC_Nid = find(reshape(BC_N', [],1));
     p = 0.01; h = 25; l = 250;
     F = sparse(BC_Nid,1,1,sdof,1);

@@ -3,7 +3,7 @@ addpath('FE'); addpath('MMA'); addpath('data');
 % pl:penal, q:stress relaxation, p:p-norm
 rmin = 0.5;   pl = 3;   q = 0.5;   p = 20;   volfrac = 0.5;
 
-saveFileName = '4';
+saveFileName = '5';
 plotCut = 0.15;
 
 [NODE,ELEM] = inp_('Job-L.inp');
@@ -58,7 +58,7 @@ while  outit < maxoutit
     x_his(:,outit)=xmma;
 
     % PRINT RESULTS
-    fprintf(' It.:%5i   P-norm Stress.:%11.4f   Vol.:%7.3f   MISES(max).:%11.4f \n',outit,pnorm, ...
+    fprintf(' It.:%5i   Compliance.:%11.4f   P-norm.:%11.4f   Vol.:%7.3f\n',f0val,outit,pnorm, ...
         mean(x(:)),max(MISES));
 
     % Plot Density
