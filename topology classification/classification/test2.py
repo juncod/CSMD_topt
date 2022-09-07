@@ -24,13 +24,13 @@ for i in compl_file_list_py:
                        header=None, index_col=None)
     sample = df.to_numpy()
     fliped_sample = np.flip(df.to_numpy(), axis=1)
-    X_compl.append(sample.ravel())
-    X_compl.append(fliped_sample.ravel())
+    X_compl.append(sample)
+    X_compl.append(fliped_sample)
     for j in range(3):
         sample = np.flip(sample.transpose(), axis=1)
         fliped_sample = np.flip(fliped_sample.transpose(), axis=1)
-        X_compl.append(sample.ravel())
-        X_compl.append(fliped_sample.ravel())
+        X_compl.append(sample)
+        X_compl.append(fliped_sample)
 
 X_heat = []
 for i in heat_file_list_py:
@@ -39,31 +39,14 @@ for i in heat_file_list_py:
                        header=None, index_col=None)
     sample = df.to_numpy()
     fliped_sample = np.flip(df.to_numpy(), axis=1)
-    X_heat.append(sample.ravel())
-    X_heat.append(fliped_sample.ravel())
+    X_heat.append(sample)
+    X_heat.append(fliped_sample)
     for j in range(3):
         sample = np.flip(sample.transpose(), axis=1)
         fliped_sample = np.flip(fliped_sample.transpose(), axis=1)
-        X_heat.append(sample.ravel())
-        X_heat.append(fliped_sample.ravel())
+        X_heat.append(sample)
+        X_heat.append(fliped_sample)
 
-X_test = []
-for i in test_file_list_py:
-    filename = test_path+'/'+i
-    df = pd.read_excel(filename, engine='openpyxl',
-                       header=None, index_col=None)
-    sample = df.to_numpy()
-    X_test.append(sample.ravel())
-
-
-Y_compl = [0 for i in range(len(X_compl))]
-Y_heat = [1 for i in range(len(X_heat))]
-
-X_sample = X_compl + X_heat
-Y_sample = Y_compl + Y_heat
-classifier = SVC(kernel='sigmoid')  # linear poly rbf sigmoid
-classifier.fit(X_sample, Y_sample)
-
-
-for i in range(len(X_test)): 
-    print(classifier.predict(X_test[i-1].reshape(1, -1)))
+X_list = X_compl + X_heat
+X_train = np.stack(X_list, axis=0)
+print(X_train.shape)
