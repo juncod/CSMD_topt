@@ -58,59 +58,42 @@ end
 %SENSITIVITIES
 if nSens
     dfxi=varargin; dfx=varargin; 
-    %     lambda=zeros(nSens,nelx); % MAYBE MAKE IT 3D (zeros(nelz,nelx, nSens))?
-        lambda = zeros(nSens, nelx,nelz);
-        % from top to base layer:
-        for i=1:nely-1
-            % smin sensitivity terms
-            dsmindx  = .5*(1-(x(i,:,:)-Xi(i,:,:))./sq(i,:,:));
-            %dsmindXi = .5*(1+(x(i,:)-Xi(i,:))./sq(i,:)); 
-            dsmindXi = 1-dsmindx; 
-            % smax sensitivity terms
-    %         cbr = [0, xi(i+1,:), 0] + SHIFT; % pad with zeros
-            cbr = zeros(1,nelx+2,nelz+2);
-            cbr(1,2:nelx+1, 2:nelz+1) = xi(i+1,:,:);
-            
-    %         dmx = zeros(Ns,nelx);
-    %         for j=1:Ns
-    %             dmx(j,:) = (P/Q)*keep(i,:).^(1/Q-1).*cbr((1:nelx)+(j-1)).^(P-1);
-    %         end        
-            dmx = zeros(Ns, nelx, nelz);
-            for j = 1:Ns
-                if j <= 3
-                    dmx(j,:,:) = (P/Q)*keep(i,:,:).^(1/Q-1).*cbr(1,(1:nelx)+(j-1),(2:nelz+1)).^(P-1);
-                elseif j == 4
-                    dmx(j,:,:) = (P/Q)*keep(i,:,:).^(1/Q-1).*cbr(1,(2:nelx+1),(1:nelz)).^(P-1);
-                elseif j == 5
-                    dmx(j,:,:) = (P/Q)*keep(i,:,:).^(1/Q-1).*cbr(1,(2:nelx+1),(1:nelz)+2).^(P-1);
-                end
-            end
-            
-    %         % rearrange data for quick multiplication:
-    %         qj=repmat([-1 0 1]',nelx,1);
-    %         qi=repmat(1:nelx,3,1); qi=qi(:);
-    %         qj=qj+qi; qs=dmx(:);
-    %         dsmaxdxi=sparse(qi(2:end-1),qj(2:end-1),qs(2:end-1)); 
-            
-            for k=1:nSens
-                dfx{k}(i,:,:) = dsmindx.*(dfxi{k}(i,:,:)+lambda(k,:,:));
-    %              lambda(k,:)= ((dfxi{k}(i,:)+lambda(k,:)).*dsmindXi)*dsmaxdxi;
-                preLambda = zeros(1,nelx+2,nelz+2);
-                preLambda(1,2:nelx+1,2:nelz+1) = (dfxi{k}(i,:,:)+lambda(k,:,:)).*dsmindXi;
-                for nz=1:nelz
-                    for nx = 1:nelx
-                        lambda(k, nx, nz) = sum([preLambda(1, nx-1+1,nz+1);...
-                                                preLambda(1, nx+1,nz+1);...
-                                                preLambda(1, nx+1+1,nz+1);...
-                                                preLambda(1, nx+1,nz-1+1);...
-                                                preLambda(1, nx+1,nz+1+1)].*...
-                                                dmx(2,nx,nz));
-    %    [dmx(1,nx,nz);dmx(2,nx,nz); dmx(3,nx,nz);dmx(4,nx,nz); dmx(5,nx,nz)]
-                                                
+    lambda=zeros(nSens,nelx,nelz); 
+    % from top to base layer:
+    for i=1:nely-1
+        % smin sensitivity terms
+        dsmindx  = .5*(1-(x(i,:,:)-Xi(i,:,:))./sq(i,:,:));
+        %dsmindXi = .5*(1+(x(i,:)-Xi(i,:))./sq(i,:)); 
+        dsmindXi = 1-dsmindx; 
+        % smax sensitivity terms
+        cbr = padarray(squeeze(xi(i+1,:,:)),[1 1],0,'both');
+        dmx = zeros(Ns,nelx,nelz);
+        for j=1:Ns
+            dmx(j,:,:) = (P/Q)*keep(i,:,:).^(1/Q-1).*cbr((1:nelx)+(j-1)).^(P-1);
+        end        
+        %%%%%%%%%
+        %   5   %
+        % 1 2 3 %
+        %   4   %
+        %%%%%%%%%
+        for k=1:nSens
+            dfx{k}(i,:,:) = dsmindx.*(dfxi{k}(i,:,:)+lambda(k,:,:));
+            for lx=1:nelx
+                for lz=1:nelz
+                    dsmaxdxi = zeros(nelx+2,nelz+2);
+                    dsmaxdxi(lx,lz+1) = dmx(1,lx,lz);
+                    dsmaxdxi(lx+1,lz+1) = dmx(2,lx,lz);
+                    dsmaxdxi(lx+2,lz+1) = dmx(3,lx,lz);
+                    dsmaxdxi(lx+1,lz) = dmx(4,lx,lz);
+                    dsmaxdxi(lx+1,lz+2) = dmx(5,lx,lz);
+                    dsmaxdxi(end,:)=[];dsmaxdxi(:,end)=[]; dsmaxdxi(1,:)=[]; dsmaxdxi(:,1)=[];
+                    dsmaxdxi=reshape(dsmaxdxi,1,nelx,nelz);
+
+                    lambda(k,lx,lz)= sum(sum(((dfxi{k}(i,:,:)+lambda(k,:,:)).*dsmindXi).*dsmaxdxi));
                     end
                 end
             end
-        end
+        end%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% => Sparse 개선 필요
     % base layer:
     i=nely;
     for k=1:nSens

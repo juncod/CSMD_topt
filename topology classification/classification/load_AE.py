@@ -113,7 +113,7 @@ encoder.summary()
 ###############################################################
 
 
-########################### decoder ###########################
+########################### dncoder ###########################
 # Input으로는 2D 좌표가 들어갑니다.
 decoder_input = Input(shape=(2, ))
 
@@ -157,10 +157,13 @@ x = encoder(encoder_in)
 decoder_out = decoder(x)
 auto_encoder = Model(encoder_in, decoder_out)
 
+tf.keras.utils.plot_model(encoder,to_file='encoder.png')
+tf.keras.utils.plot_model(decoder,to_file='decoder.png')
+tf.keras.utils.plot_model(auto_encoder,to_file='autoencoder.png')
 
 auto_encoder.compile(optimizer=tf.keras.optimizers.Adam(
     LEARNING_RATE), loss=tf.keras.losses.MeanSquaredError())
-auto_encoder.fit(x_train, x_train,
+auto_encoder.fit(x_train, y_train,
                  batch_size=BATCH_SIZE,
                  epochs=epoch
                  )
@@ -171,8 +174,9 @@ validation = encoder.predict(validation_set)
 plt.figure(figsize=(15, 12))
 plt.scatter(x=xy[:, 0], y=xy[:, 1], c=y_train,
             cmap=plt.get_cmap('Paired'), s=3)
-
-plt.scatter(x=validation[:,0],y=validation[:,1],c=['r','b','g','m'])
+a=np.mean(xy[:,0])
+b=np.mean(xy[:,1])
+# plt.scatter(x=validation[:,0],y=validation[:,1],c=['r','b','g','m'])
 plt.colorbar()
 plt.show()
 ###############################################################
